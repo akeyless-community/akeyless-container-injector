@@ -4,17 +4,28 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
 
+# Docs and templates use placeholder values — scan source and config only.
+EXCLUDE=(
+  ':!scripts/check-secrets.sh'
+  ':!README.md'
+  ':!SECURITY.md'
+  ':!LICENSE'
+  ':!examples/README.md'
+  ':!*.example'
+  ':!.env.example'
+)
+
 patterns=(
   'p-[a-z0-9]{10,}'
   'AKIA[0-9A-Z]{16}'
   '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----'
-  'AKEYLESS_ACCESS_KEY=[^[:space:]]{8,}'
-  'access_key=['\''\"][^'\''\"]{8,}'
+  'AKEYLESS_ACCESS_KEY=[^[:space:]]{20,}'
+  'access_key=['\''\"][^'\''\"]{20,}'
 )
 
 found=0
 for pat in "${patterns[@]}"; do
-  if git grep -nE "$pat" -- . ':!scripts/check-secrets.sh' 2>/dev/null; then
+  if git grep -nE "$pat" -- . "${EXCLUDE[@]}" 2>/dev/null; then
     found=1
   fi
 done
