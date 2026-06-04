@@ -1,0 +1,75 @@
+# Pattern A: single container — inject + restart app process on secret change (rollout-restart equivalent)
+# Credentials: cp .env.example .env (never commit .env)
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      AKEYLESS_ACCESS_ID: ${AKEYLESS_ACCESS_ID:-}
+      AKEYLESS_ACCESS_KEY: ${AKEYLESS_ACCESS_KEY:-}
+      AKEYLESS_GATEWAY_URL: ${AKEYLESS_GATEWAY_URL:-https://api.akeyless.io}
+      # Universal Identity (uncomment and mount uid token file):
+      # AKEYLESS_ACCESS_TYPE: universal_identity
+      # AKEYLESS_UID_TOKEN_FILE: /run/akeyless/uid-token
+    # volumes:
+    #   - ${HOME}/.akeyless/uid_rotator/uid-token:/run/akeyless/uid-token:ro
+    volumes:
+      - ./inject.yaml:/config/inject.yaml:ro
+    entrypoint:
+      - /usr/local/bin/akeyless-inject
+    command:
+      - run
+      - --spec
+      - /config/inject.yaml
+      - --
+      - sh
+      - -c
+      - echo "injected len=$${#MY_SECRET}" && exec sleep infinity
+
+# Pattern B: init + app + optional watch sidecar (uncomment to use)
+#  akeyless-init:
+#    image: akeyless-container-injector:local
+#    environment:
+#      AKEYLESS_ACCESS_ID: ${AKEYLESS_ACCESS_ID}
+#      AKEYLESS_ACCESS_KEY: ${AKEYLESS_ACCESS_KEY}
+#      AKEYLESS_GATEWAY_URL: ${AKEYLESS_GATEWAY_URL:-https://api.akeyless.io}
+#    volumes:
+#      - ./inject.yaml:/config/inject.yaml:ro
+#      - secrets:/akeyless/secrets
+#    command: ["init", "--spec", "/config/inject.yaml"]
+#    restart: "no"
+#
+#  app-files:
+#    image: alpine:3.19
+#    depends_on:
+#      akeyless-init:
+#        condition: service_completed_successfully
+#    volumes:
+#      - secrets:/akeyless/secrets:ro
+#    command: ["sh", "-c", "cat /akeyless/secrets/my-secret && sleep infinity"]
+#
+#  akeyless-watch:
+#    image: akeyless-container-injector:local
+#    depends_on: [app-files]
+#    environment:
+#      AKEYLESS_ACCESS_ID: ${AKEYLESS_ACCESS_ID}
+#      AKEYLESS_ACCESS_KEY: ${AKEYLESS_ACCESS_KEY}
+#      AKEYLESS_GATEWAY_URL: ${AKEYLESS_GATEWAY_URL:-https://api.akeyless.io}
+#    volumes:
+#      - ./inject-file-refresh.yaml:/config/inject.yaml:ro
+#      - secrets:/akeyless/secrets
+#      - /var/run/docker.sock:/var/run/docker.sock
+#    command:
+#      - watch
+#      - --spec
+#      - /config/inject.yaml
+#      - --restart-cmd
+#      - docker restart examples-app-files-1
+#    restart: unless-stopped
+#
+# volumes:
+#   secrets:

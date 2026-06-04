@@ -1,0 +1,11 @@
+secret_dir: /akeyless/secrets
+
+refresh:
+  interval: 30s
+  on_change: restart
+
+secrets:
+  - path: /demo/my-secret
+    type: static
+    env: MY_SECRET
+    file: my-secret

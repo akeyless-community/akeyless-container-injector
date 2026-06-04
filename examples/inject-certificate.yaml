@@ -1,0 +1,12 @@
+secret_dir: /akeyless/secrets
+
+refresh:
+  interval: 30s
+  on_change: file
+
+secrets:
+  - path: /pki/my-tls-cert
+    type: certificate
+    file: tls.crt
+    key_file: tls.key
+    ignore_cache: true

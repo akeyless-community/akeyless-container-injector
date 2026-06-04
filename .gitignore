@@ -1,0 +1,29 @@
+/bin/
+/dist/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Local credentials — never commit
+.env
+.env.*
+!.env.example
+!examples/.env.example
+
+# Secret material from local runs
+/tmp/
+*.pem
+*.key
+*.crt
+uid-token
+vault_token
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Go
+coverage.out
+*.test
