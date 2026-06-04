@@ -182,7 +182,7 @@ Same image and commands work with `podman run` / `podman-compose`. Mount the UID
 
 | Automation | How |
 |------------|-----|
-| **CI tests** | GitHub Actions workflow runs `go test` and [Gitleaks](https://github.com/gitleaks/gitleaks) on every PR (included in this repo) |
+| **CI tests** | GitHub Actions runs `make check-secrets`, `go test`, and build on every PR |
 | **Pre-push secret check** | `make check-secrets` — local grep for common credential patterns |
 | **Image publish** | `make docker` then push to your registry; pin by digest in production |
 | **UID on VMs** | Install `akeyless uid-auto-rotate` on the host; mount token into containers |
